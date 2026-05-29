@@ -1,0 +1,1 @@
+Open index.html to view the standalone JAGD Amazon PO Tracker demo. Keep the pdfs folder next to index.html so View PDF links work. On a phone, upload this folder/zip to Google Drive, Dropbox, OneDrive, or a simple static host and open index.html.
