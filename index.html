@@ -39,6 +39,7 @@
     .warn { background:#fff7ed; color:#9a3412; }
     .mobile-card { display:none; }
     .footer { text-align:center; color:var(--muted); font-size:12px; padding:24px 0 40px; }
+    .empty-state { padding:28px; text-align:center; color:var(--muted); font-weight:700; border:1px dashed var(--line); border-radius:16px; background:#f9fafb; margin-top:10px; }
     @media (max-width: 780px) {
       header { position:relative; border-radius:0 0 22px 22px; }
       .cards { grid-template-columns:repeat(2,minmax(0,1fr)); margin-top:-24px; }
@@ -77,7 +78,7 @@
     <div class="section-title"><h2>Orders</h2><span class="note" id="visibleCount"></span></div>
     <div class="controls">
       <input id="search" placeholder="Search item, PO, order #...">
-      <select id="poFilter"><option value="">All POs</option></select>
+      <select id="poFilter"><option value="">Choose a PO to view orders</option></select>
       <select id="sort"><option value="dateDesc">Newest first</option><option value="dateAsc">Oldest first</option><option value="totalDesc">Highest total</option><option value="totalAsc">Lowest total</option></select>
       <button class="secondary" id="clearBtn">Clear</button>
     </div>
@@ -132,7 +133,14 @@ document.getElementById('clearBtn').onclick=()=>{search.value='';poFilter.value=
 [search,poFilter,sort].forEach(el=>el.addEventListener('input', render));
 function render(){
   const q=search.value.trim().toLowerCase(), po=poFilter.value;
-  let rows=DATA.orders.filter(o=>(!po || o.mappedPO===po) && (!q || [o.mappedPO,o.rawPO,o.orderNo,o.summary].join(' ').toLowerCase().includes(q)));
+  tbody.innerHTML=''; mobile.innerHTML='';
+  if(!po){
+    visible.textContent='Choose a PO to load orders';
+    tbody.innerHTML='<tr><td colspan="7"><div class="empty-state">Choose a PO above to view orders. This keeps the dashboard fast and avoids loading every order at once.</div></td></tr>';
+    mobile.innerHTML='<div class="empty-state">Choose a PO above to view orders.</div>';
+    return;
+  }
+  let rows=DATA.orders.filter(o=>(o.mappedPO===po) && (!q || [o.mappedPO,o.rawPO,o.orderNo,o.summary].join(' ').toLowerCase().includes(q)));
   rows.sort((a,b)=>{
     if(sort.value==='dateAsc') return a.date.localeCompare(b.date);
     if(sort.value==='totalDesc') return b.total-a.total;
@@ -140,7 +148,6 @@ function render(){
     return b.date.localeCompare(a.date);
   });
   visible.textContent=`${rows.length} orders shown • ${money(rows.reduce((s,o)=>s+o.total,0))}`;
-  tbody.innerHTML=''; mobile.innerHTML='';
   rows.forEach(o=>{
     const poClass=o.mappedPO.includes('Needs Review')?'pill warn':'pill';
     const prodUrl = productSearchUrl(o);
